@@ -1,0 +1,173 @@
+{
+  "info": {
+    "name": "Feature Flag & Environment Management System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api/v1" },
+    { "key": "access_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "flag_id", "value": "1" },
+    { "key": "environment_id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"role_id\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('access_token', data.access_token);",
+                  "pm.collectionVariables.set('refresh_token', data.refresh_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"ChangeMe123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/refresh",
+            "body": { "mode": "raw", "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        { "name": "Get Me", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/users/me" } },
+        { "name": "List Users", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/users" } },
+        { "name": "List Roles", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/users/roles/all" } }
+      ]
+    },
+    {
+      "name": "Environments",
+      "item": [
+        { "name": "List Environments", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/environments" } },
+        {
+          "name": "Create Environment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/environments",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Staging\",\n  \"description\": \"Pre-prod\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Feature Flags",
+      "item": [
+        { "name": "List Flags", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/feature-flags" } },
+        {
+          "name": "Create Flag",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/feature-flags",
+            "body": { "mode": "raw", "raw": "{\n  \"key\": \"new_checkout_flow\",\n  \"name\": \"New Checkout Flow\",\n  \"description\": \"Redesigned checkout experience\"\n}" }
+          }
+        },
+        {
+          "name": "Toggle Flag",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/feature-flags/{{flag_id}}/toggle",
+            "body": { "mode": "raw", "raw": "{\n  \"is_enabled\": true\n}" }
+          }
+        },
+        {
+          "name": "Upsert Rollout (Percentage)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/feature-flags/{{flag_id}}/rollouts",
+            "body": { "mode": "raw", "raw": "{\n  \"environment_id\": {{environment_id}},\n  \"is_enabled\": true,\n  \"rollout_percentage\": 25\n}" }
+          }
+        },
+        {
+          "name": "Rollback Rollout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/feature-flags/{{flag_id}}/rollouts/rollback",
+            "body": { "mode": "raw", "raw": "{\n  \"environment_id\": {{environment_id}}\n}" }
+          }
+        },
+        {
+          "name": "Add User Assignment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/feature-flags/{{flag_id}}/assignments",
+            "body": { "mode": "raw", "raw": "{\n  \"environment_id\": {{environment_id}},\n  \"target_user_identifier\": 42,\n  \"is_enabled\": true\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Evaluation",
+      "item": [
+        {
+          "name": "Evaluate Flag (client SDK call)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/evaluate",
+            "body": { "mode": "raw", "raw": "{\n  \"flag_key\": \"new_checkout_flow\",\n  \"environment_name\": \"Production\",\n  \"user_identifier\": 42\n}" }
+          }
+        },
+        {
+          "name": "Get Usage Analytics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/evaluate/new_checkout_flow/usage?environment_name=Production"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit Logs",
+      "item": [
+        { "name": "List Audit Logs", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/audit-logs" } }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        { "name": "Get Stats", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/dashboard/stats" } }
+      ]
+    }
+  ]
+}
